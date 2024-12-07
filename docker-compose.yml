@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${EKL_VERSION}
+    #image: elasticsearch/elastic:8.10.2
+    restart: always
+    volumes:
+      - esdata1:/usr/share/elasticsearch/data:rw
+    container_name: "elastic"
+    environment:
+      - discovery.type=single-node
+      #- ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - EKL
+      #- chatbot-rag-nw
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${EKL_VERSION}
+    build:
+      context: .
+      dockerfile: kibana/Dockerfile
+    ports:
+      - 5601:5601
+    container_name: "kibana"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elastic:9200
+    depends_on:
+      - elastic
+    networks:
+      - EKL
+
+volumes:
+  esdata1:
+    driver: local
+
+networks:
+  EKL:
+    driver: bridge
+  # chatbot-rag-nw:
+  #   driver: bridge
+  #   external: true
+
